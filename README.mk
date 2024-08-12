@@ -1,0 +1,1 @@
+# This project uses the open weather API to pull places and provides the weather (Temperatue and Sky)
