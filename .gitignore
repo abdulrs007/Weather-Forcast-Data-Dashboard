@@ -1,3 +1,6 @@
 venv
 .idea
 App_Design.png
+.streamlit/secrets.toml
+
+

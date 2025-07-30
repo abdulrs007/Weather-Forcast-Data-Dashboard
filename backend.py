@@ -1,10 +1,9 @@
 import requests
+import streamlit as st
 
-API_KEY = "67c68a1126f56ef80372ddfffc642e9c"
-#  the below gives temp in celcius directly instead of converting
-# https://api.openweathermap.org/data/2.5/forecast?q={place}&units=metric&appid={API_KEY}
 def get_data(place, forecast_days=None):
-    url = f"https://api.openweathermap.org/data/2.5/forecast?q={place}&appid={API_KEY}"
+    API_KEY = st.secrets["openweather"]["api_key"]
+    url = f"https://api.openweathermap.org/data/2.5/forecast?q={place}&units=metric&appid={API_KEY}"
     response = requests.get(url)
     data = response.json()
     filtered_data = data["list"]
