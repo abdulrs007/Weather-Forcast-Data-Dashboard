@@ -1,19 +1,26 @@
+# Import statements MUST be first
 import streamlit as st
-import plotly.express as px
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 import pandas as pd
-from datetime import datetime, timedelta
+import plotly.graph_objects as go
+import plotly.express as px
+from plotly.subplots import make_subplots
+from datetime import datetime
 import time
-from backend import get_data
 
-# Configure page
+# Configure page - MUST be first Streamlit command
 st.set_page_config(
     page_title="Weather Forecast Pro",
     page_icon="🌤️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# Import your backend function AFTER set_page_config
+try:
+    from backend import get_data
+except ImportError:
+    st.error("❌ Backend module not found. Please ensure 'backend.py' exists with the 'get_data' function.")
+    st.stop()
 
 # Custom CSS for modern styling
 st.markdown("""
@@ -23,7 +30,7 @@ st.markdown("""
 
     /* Global styles */
     .stApp {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
         font-family: 'Inter', sans-serif;
     }
 
@@ -38,69 +45,78 @@ st.markdown("""
     .main-header {
         text-align: center;
         padding: 2rem 0;
-        background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+        background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.9) 100%);
         border-radius: 20px;
         margin-bottom: 2rem;
         backdrop-filter: blur(10px);
-        border: 1px solid rgba(255,255,255,0.1);
+        border: 1px solid rgba(0,0,0,0.08);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.08);
     }
 
     .main-title {
         font-size: 3.5rem;
         font-weight: 700;
-        background: linear-gradient(45deg, #fff, #f0f0f0);
+        background: linear-gradient(45deg, #1e293b, #475569);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         margin-bottom: 0.5rem;
-        text-shadow: 0 4px 20px rgba(0,0,0,0.3);
     }
 
     .main-subtitle {
-        color: rgba(255,255,255,0.9);
+        color: #64748b;
         font-size: 1.2rem;
-        font-weight: 300;
+        font-weight: 400;
         margin-bottom: 0;
     }
 
     /* Sidebar styling */
     .css-1d391kg {
-        background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%);
+        background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.9) 100%);
         backdrop-filter: blur(20px);
-        border-right: 1px solid rgba(255,255,255,0.1);
+        border-right: 1px solid rgba(0,0,0,0.08);
+        box-shadow: 2px 0 20px rgba(0,0,0,0.05);
     }
 
     .sidebar .stSelectbox label, .sidebar .stTextInput label, .sidebar .stSlider label {
-        color: white !important;
+        color: #374151 !important;
         font-weight: 600 !important;
         font-size: 0.9rem !important;
         text-transform: uppercase !important;
-        letter-spacing: 1px !important;
+        letter-spacing: 0.5px !important;
     }
 
-    /* Input field styling */
+    /* Input field styling - Fixed visibility */
     .stTextInput > div > div > input {
-        background: rgba(255,255,255,0.2) !important;
-        color: white !important;
-        border: 1px solid rgba(255,255,255,0.3) !important;
+        background: rgba(255,255,255,0.9) !important;
+        color: #1f2937 !important;
+        border: 1px solid rgba(156,163,175,0.4) !important;
         border-radius: 12px !important;
         backdrop-filter: blur(10px) !important;
+        font-weight: 500 !important;
+    }
+
+    .stTextInput > div > div > input:focus {
+        border: 2px solid #3b82f6 !important;
+        box-shadow: 0 0 0 3px rgba(59,130,246,0.1) !important;
     }
 
     .stTextInput > div > div > input::placeholder {
-        color: rgba(255,255,255,0.7) !important;
+        color: #9ca3af !important;
+        font-weight: 400 !important;
     }
 
     .stSelectbox > div > div > select {
-        background: rgba(255,255,255,0.2) !important;
-        color: white !important;
-        border: 1px solid rgba(255,255,255,0.3) !important;
+        background: rgba(255,255,255,0.9) !important;
+        color: #1f2937 !important;
+        border: 1px solid rgba(156,163,175,0.4) !important;
         border-radius: 12px !important;
         backdrop-filter: blur(10px) !important;
+        font-weight: 500 !important;
     }
 
     /* Button styling */
     .stButton > button {
-        background: linear-gradient(45deg, #ff6b6b, #ee5a24) !important;
+        background: linear-gradient(45deg, #3b82f6, #1d4ed8) !important;
         color: white !important;
         border: none !important;
         border-radius: 12px !important;
@@ -109,44 +125,46 @@ st.markdown("""
         text-transform: uppercase !important;
         letter-spacing: 1px !important;
         transition: all 0.3s ease !important;
-        box-shadow: 0 8px 25px rgba(238, 90, 36, 0.4) !important;
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3) !important;
     }
 
     .stButton > button:hover {
         transform: translateY(-2px) !important;
-        box-shadow: 0 12px 35px rgba(238, 90, 36, 0.6) !important;
+        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4) !important;
     }
 
     /* Metric cards */
     .css-1r6slb0 {
-        background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%) !important;
+        background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.9) 100%) !important;
         backdrop-filter: blur(20px) !important;
-        border: 1px solid rgba(255,255,255,0.1) !important;
+        border: 1px solid rgba(0,0,0,0.08) !important;
         border-radius: 15px !important;
         padding: 1rem !important;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08) !important;
     }
 
     /* Content containers */
     .weather-container {
-        background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%);
+        background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.9) 100%);
         backdrop-filter: blur(20px);
-        border: 1px solid rgba(255,255,255,0.1);
+        border: 1px solid rgba(0,0,0,0.08);
         border-radius: 20px;
         padding: 2rem;
         margin: 1rem 0;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.08);
     }
 
     /* Success/Error messages */
     .stAlert {
-        background: rgba(255,255,255,0.1) !important;
-        border: 1px solid rgba(255,255,255,0.2) !important;
+        background: rgba(255,255,255,0.9) !important;
+        border: 1px solid rgba(0,0,0,0.1) !important;
         border-radius: 12px !important;
         backdrop-filter: blur(10px) !important;
     }
 
     /* Progress bar */
     .stProgress > div > div > div {
-        background: linear-gradient(45deg, #ff6b6b, #ee5a24) !important;
+        background: linear-gradient(45deg, #3b82f6, #1d4ed8) !important;
     }
 
     /* Hide Streamlit branding */
@@ -167,11 +185,13 @@ st.markdown("""
 
     /* Chart container */
     .chart-container {
-        background: rgba(255,255,255,0.05);
+        background: rgba(255,255,255,0.95);
         border-radius: 15px;
-        padding: 1rem;
+        padding: 1.5rem;
         backdrop-filter: blur(10px);
         margin: 1rem 0;
+        border: 1px solid rgba(0,0,0,0.08);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -244,7 +264,7 @@ if place:
     with col2:
         st.markdown(f"""
         <div style="text-align: center; margin: 2rem 0;">
-            <h2 style="color: white; font-weight: 600;">
+            <h2 style="color: #1f2937; font-weight: 600;">
                 {option} forecast for the next {days} {'day' if days == 1 else 'days'} in 
                 <span style="color: #ff6b6b;">{place}</span>
             </h2>
@@ -329,30 +349,30 @@ if place:
                 y=df['Temperature'],
                 mode='lines+markers',
                 name='Temperature',
-                line=dict(color='#ff6b6b', width=3, shape='spline'),
-                marker=dict(size=8, color='#fff', line=dict(color='#ff6b6b', width=2)),
+                line=dict(color='#3b82f6', width=3, shape='spline'),
+                marker=dict(size=8, color='#fff', line=dict(color='#3b82f6', width=2)),
                 fill='tonexty',
-                fillcolor='rgba(255, 107, 107, 0.1)'
+                fillcolor='rgba(59, 130, 246, 0.1)'
             ))
 
             # Add temperature range bands
-            fig.add_hline(y=20, line_dash="dash", line_color="rgba(255,255,255,0.5)",
+            fig.add_hline(y=20, line_dash="dash", line_color="rgba(100,116,139,0.5)",
                           annotation_text="Comfort Zone", annotation_position="bottom right")
 
             # Update layout
             fig.update_layout(
                 title=dict(
                     text=f"Temperature Forecast - {place}",
-                    font=dict(size=24, color='white', family='Inter'),
+                    font=dict(size=24, color='#1e293b', family='Inter'),
                     x=0.5
                 ),
                 xaxis_title="Date & Time",
                 yaxis_title="Temperature (°C)",
-                font=dict(color='white', family='Inter'),
-                paper_bgcolor='rgba(0,0,0,0)',
-                plot_bgcolor='rgba(0,0,0,0)',
-                xaxis=dict(gridcolor='rgba(255,255,255,0.1)', showgrid=True),
-                yaxis=dict(gridcolor='rgba(255,255,255,0.1)', showgrid=True),
+                font=dict(color='#374151', family='Inter'),
+                paper_bgcolor='rgba(255,255,255,0.98)',
+                plot_bgcolor='rgba(255,255,255,0.98)',
+                xaxis=dict(gridcolor='rgba(148,163,184,0.3)', showgrid=True),
+                yaxis=dict(gridcolor='rgba(148,163,184,0.3)', showgrid=True),
                 showlegend=False,
                 height=500
             )
@@ -365,15 +385,15 @@ if place:
             hist_fig = px.histogram(
                 df, x='Temperature', nbins=15,
                 title="Temperature Distribution",
-                color_discrete_sequence=['#ff6b6b']
+                color_discrete_sequence=['#3b82f6']
             )
 
             hist_fig.update_layout(
-                font=dict(color='white', family='Inter'),
-                paper_bgcolor='rgba(0,0,0,0)',
-                plot_bgcolor='rgba(0,0,0,0)',
-                xaxis=dict(gridcolor='rgba(255,255,255,0.1)'),
-                yaxis=dict(gridcolor='rgba(255,255,255,0.1)'),
+                font=dict(color='#374151', family='Inter'),
+                paper_bgcolor='rgba(255,255,255,0.98)',
+                plot_bgcolor='rgba(255,255,255,0.98)',
+                xaxis=dict(gridcolor='rgba(148,163,184,0.3)'),
+                yaxis=dict(gridcolor='rgba(148,163,184,0.3)'),
                 height=400
             )
 
@@ -417,22 +437,23 @@ if place:
                 with cols[idx % 5]:
                     st.markdown(f"""
                     <div style="
-                        background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%);
+                        background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.9) 100%);
                         backdrop-filter: blur(20px);
-                        border: 1px solid rgba(255,255,255,0.1);
+                        border: 1px solid rgba(0,0,0,0.08);
                         border-radius: 15px;
                         padding: 1.5rem;
                         text-align: center;
                         margin: 0.5rem 0;
                         transition: transform 0.3s ease;
+                        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
                     ">
                         <div class="weather-icon" style="font-size: 3rem; margin-bottom: 0.5rem;">
                             {icon}
                         </div>
-                        <div style="color: white; font-weight: 600; margin-bottom: 0.5rem;">
+                        <div style="color: #1f2937; font-weight: 600; margin-bottom: 0.5rem;">
                             {formatted_date}
                         </div>
-                        <div style="color: rgba(255,255,255,0.8); font-size: 0.9rem;">
+                        <div style="color: #6b7280; font-size: 0.9rem;">
                             {most_common_condition}
                         </div>
                     </div>
@@ -448,12 +469,12 @@ if place:
                 values=condition_counts.values,
                 names=condition_counts.index,
                 title="Weather Conditions Distribution",
-                color_discrete_sequence=px.colors.qualitative.Set3
+                color_discrete_sequence=['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
             )
 
             pie_fig.update_layout(
-                font=dict(color='white', family='Inter'),
-                paper_bgcolor='rgba(0,0,0,0)',
+                font=dict(color='#374151', family='Inter'),
+                paper_bgcolor='rgba(255,255,255,0.98)',
                 height=500
             )
 
@@ -482,21 +503,21 @@ if place:
             # Temperature
             fig.add_trace(
                 go.Scatter(x=df['DateTime'], y=df['Temperature'],
-                           name='Temperature', line=dict(color='#ff6b6b')),
+                           name='Temperature', line=dict(color='#3b82f6')),
                 row=1, col=1
             )
 
             # Humidity
             fig.add_trace(
                 go.Scatter(x=df['DateTime'], y=df['Humidity'],
-                           name='Humidity', line=dict(color='#4ecdc4')),
+                           name='Humidity', line=dict(color='#10b981')),
                 row=1, col=2
             )
 
             # Pressure
             fig.add_trace(
                 go.Scatter(x=df['DateTime'], y=df['Pressure'],
-                           name='Pressure', line=dict(color='#45b7d1')),
+                           name='Pressure', line=dict(color='#f59e0b')),
                 row=2, col=1
             )
 
@@ -504,23 +525,23 @@ if place:
             condition_counts = df['Condition'].value_counts()
             fig.add_trace(
                 go.Bar(x=condition_counts.index, y=condition_counts.values,
-                       name='Conditions', marker_color='#96ceb4'),
+                       name='Conditions', marker_color='#8b5cf6'),
                 row=2, col=2
             )
 
             fig.update_layout(
                 height=800,
                 showlegend=False,
-                font=dict(color='white', family='Inter'),
-                paper_bgcolor='rgba(0,0,0,0)',
-                plot_bgcolor='rgba(0,0,0,0)'
+                font=dict(color='#374151', family='Inter'),
+                paper_bgcolor='rgba(255,255,255,0.98)',
+                plot_bgcolor='rgba(255,255,255,0.98)'
             )
 
             # Update all subplot backgrounds
             for i in range(1, 3):
                 for j in range(1, 3):
-                    fig.update_xaxes(gridcolor='rgba(255,255,255,0.1)', row=i, col=j)
-                    fig.update_yaxes(gridcolor='rgba(255,255,255,0.1)', row=i, col=j)
+                    fig.update_xaxes(gridcolor='rgba(148,163,184,0.3)', row=i, col=j)
+                    fig.update_yaxes(gridcolor='rgba(148,163,184,0.3)', row=i, col=j)
 
             st.plotly_chart(fig, use_container_width=True)
 
@@ -556,7 +577,7 @@ if place:
             with cols[i]:
                 if st.button(city, key=f"popular_{i}"):
                     st.session_state.quick_location = city.split(',')[0]
-                    st.experimental_rerun()
+                    st.rerun()
 
     except Exception as e:
         st.error(f"❌ An unexpected error occurred: {str(e)}")
@@ -565,30 +586,30 @@ if place:
 else:
     # Welcome screen
     st.markdown("""
-    <div style="text-align: center; padding: 4rem 2rem; color: white;">
+    <div style="text-align: center; padding: 4rem 2rem; color: #1f2937;">
         <div style="font-size: 6rem; margin-bottom: 2rem;">🌤️</div>
         <h2 style="font-weight: 300; margin-bottom: 1rem; font-size: 2rem;">
             Welcome to Weather Forecast Pro
         </h2>
-        <p style="font-size: 1.2rem; opacity: 0.8; margin-bottom: 2rem; max-width: 600px; margin-left: auto; margin-right: auto;">
+        <p style="font-size: 1.2rem; color: #6b7280; margin-bottom: 2rem; max-width: 600px; margin-left: auto; margin-right: auto;">
             Get detailed weather forecasts with beautiful visualizations. 
             Enter a location in the sidebar to get started with your weather journey.
         </p>
         <div style="display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap; margin-top: 3rem;">
-            <div style="background: rgba(255,255,255,0.1); padding: 1.5rem; border-radius: 15px; backdrop-filter: blur(10px);">
+            <div style="background: rgba(255,255,255,0.95); padding: 1.5rem; border-radius: 15px; backdrop-filter: blur(10px); border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
                 <div style="font-size: 2rem; margin-bottom: 0.5rem;">🌡️</div>
-                <div style="font-weight: 600;">Temperature Trends</div>
-                <div style="opacity: 0.8; font-size: 0.9rem;">Interactive charts & analysis</div>
+                <div style="font-weight: 600; color: #1f2937;">Temperature Trends</div>
+                <div style="color: #6b7280; font-size: 0.9rem;">Interactive charts & analysis</div>
             </div>
-            <div style="background: rgba(255,255,255,0.1); padding: 1.5rem; border-radius: 15px; backdrop-filter: blur(10px);">
+            <div style="background: rgba(255,255,255,0.95); padding: 1.5rem; border-radius: 15px; backdrop-filter: blur(10px); border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
                 <div style="font-size: 2rem; margin-bottom: 0.5rem;">🌤️</div>
-                <div style="font-weight: 600;">Sky Conditions</div>
-                <div style="opacity: 0.8; font-size: 0.9rem;">Visual weather patterns</div>
+                <div style="font-weight: 600; color: #1f2937;">Sky Conditions</div>
+                <div style="color: #6b7280; font-size: 0.9rem;">Visual weather patterns</div>
             </div>
-            <div style="background: rgba(255,255,255,0.1); padding: 1.5rem; border-radius: 15px; backdrop-filter: blur(10px);">
+            <div style="background: rgba(255,255,255,0.95); padding: 1.5rem; border-radius: 15px; backdrop-filter: blur(10px); border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
                 <div style="font-size: 2rem; margin-bottom: 0.5rem;">📊</div>
-                <div style="font-weight: 600;">Detailed Analysis</div>
-                <div style="opacity: 0.8; font-size: 0.9rem;">Comprehensive insights</div>
+                <div style="font-weight: 600; color: #1f2937;">Detailed Analysis</div>
+                <div style="color: #6b7280; font-size: 0.9rem;">Comprehensive insights</div>
             </div>
         </div>
     </div>
@@ -597,7 +618,7 @@ else:
 # Footer
 st.markdown("---")
 st.markdown("""
-<div style="text-align: center; color: rgba(255,255,255,0.6); padding: 1rem;">
+<div style="text-align: center; color: #6b7280; padding: 1rem;">
     <p>🌤️ Weather Forecast Pro | Built with Streamlit & Plotly | Data powered by your backend API</p>
 </div>
 """, unsafe_allow_html=True)
